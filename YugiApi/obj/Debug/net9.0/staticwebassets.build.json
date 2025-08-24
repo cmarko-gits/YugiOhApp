@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "sFET9aHHdttJpn5YCRxzM4w7RI0v59AfS+uTsQ3xGBQ=",
+  "Source": "YugiApi",
+  "BasePath": "_content/YugiApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
