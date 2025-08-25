@@ -60,10 +60,10 @@ namespace YugiApi.Controllers
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
             var user = await _userRepository.GetByEmailAsync(loginDto.Email);
-            if (user == null) return Unauthorized();
+            if (user == null) return BadRequest("User doesnt exists");
 
             var passwordValid = await _userRepository.CheckPasswordAsync(user, loginDto.Password);
-            if (!passwordValid) return Unauthorized();
+            if (!passwordValid) return BadRequest("Wrong password");
 
             return CreateUserObject(user);
         }

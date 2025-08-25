@@ -17,6 +17,51 @@ namespace YugiApi.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
 
+            modelBuilder.Entity("CardDeck", b =>
+                {
+                    b.Property<int>("CardsId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeckId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("CardsId", "DeckId");
+
+                    b.HasIndex("DeckId");
+
+                    b.ToTable("DeckCards", (string)null);
+                });
+
+            modelBuilder.Entity("CardDeck1", b =>
+                {
+                    b.Property<int>("Deck1Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GraveyardId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Deck1Id", "GraveyardId");
+
+                    b.HasIndex("GraveyardId");
+
+                    b.ToTable("DeckGraveyard", (string)null);
+                });
+
+            modelBuilder.Entity("CardDeck2", b =>
+                {
+                    b.Property<int>("BanishedId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Deck2Id")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BanishedId", "Deck2Id");
+
+                    b.HasIndex("Deck2Id");
+
+                    b.ToTable("DeckBanished", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -183,6 +228,22 @@ namespace YugiApi.Data.Migrations
                     b.ToTable("Cards");
                 });
 
+            modelBuilder.Entity("YugiApi.Models.Deck", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Decks");
+                });
+
             modelBuilder.Entity("YugiApi.Models.User", b =>
                 {
                     b.Property<string>("Id")
@@ -247,6 +308,51 @@ namespace YugiApi.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("CardDeck", b =>
+                {
+                    b.HasOne("YugiApi.Models.Card", null)
+                        .WithMany()
+                        .HasForeignKey("CardsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("YugiApi.Models.Deck", null)
+                        .WithMany()
+                        .HasForeignKey("DeckId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CardDeck1", b =>
+                {
+                    b.HasOne("YugiApi.Models.Deck", null)
+                        .WithMany()
+                        .HasForeignKey("Deck1Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("YugiApi.Models.Card", null)
+                        .WithMany()
+                        .HasForeignKey("GraveyardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CardDeck2", b =>
+                {
+                    b.HasOne("YugiApi.Models.Card", null)
+                        .WithMany()
+                        .HasForeignKey("BanishedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("YugiApi.Models.Deck", null)
+                        .WithMany()
+                        .HasForeignKey("Deck2Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -296,6 +402,15 @@ namespace YugiApi.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("YugiApi.Models.Deck", b =>
+                {
+                    b.HasOne("YugiApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

@@ -51,7 +51,7 @@ builder.Services.AddScoped<TokenService>();
 // --- Repositories ---
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
-
+builder.Services.AddScoped<IDeckRepository,DeckRepository>();
 // --- CardService with HttpClient ---
 builder.Services.AddHttpClient<CardService>();
 builder.Services.AddScoped<CardService>();
