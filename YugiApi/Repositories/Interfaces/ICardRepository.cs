@@ -1,5 +1,6 @@
 using YugiApi.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace YugiApi.Repositories.Interfaces
 {
@@ -10,8 +11,9 @@ namespace YugiApi.Repositories.Interfaces
         Task<bool> ExistsByNameAsync(string name);
         Task AddAsync(Card card);
         Task SaveChangesAsync();
-        Task<List<Card>> SearchByNameAsync(string name);
         IQueryable<Card> GetFilters();
+        Task AddRangeAsync(List<Card> allCards);
+        Task<bool> AnyAsync(Expression<Func<Card, bool>> predicate);
 
     }
 }

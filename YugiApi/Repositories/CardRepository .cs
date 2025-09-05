@@ -2,6 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using YugiApi.Data;
 using YugiApi.Models;
 using YugiApi.Repositories.Interfaces;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace YugiApi.Repositories
 {
@@ -22,10 +26,12 @@ namespace YugiApi.Repositories
                 .Take(pageSize)
                 .ToListAsync();
         }
-         public IQueryable<Card> GetFilters()
+
+        public IQueryable<Card> GetFilters()
         {
             return _dbContext.Cards.AsQueryable();
         }
+
         public async Task<Card> GetByIdAsync(int id)
         {
             return await _dbContext.Cards.FindAsync(id);
@@ -39,18 +45,25 @@ namespace YugiApi.Repositories
         public async Task AddAsync(Card card)
         {
             await _dbContext.Cards.AddAsync(card);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task SaveChangesAsync()
         {
             await _dbContext.SaveChangesAsync();
         }
-        public async Task<List<Card>> SearchByNameAsync(string name)
-        {
-            return await _dbContext.Cards
-                .Where(c => c.Name.Contains(name))
-                .ToListAsync();
-        }
 
+        public async Task AddRangeAsync(List<Card> allCards)
+        {
+            await _dbContext.Cards.AddRangeAsync(allCards);
+            await _dbContext.SaveChangesAsync();
+        }
+    public async Task<bool> AnyAsync(Expression<Func<Card, bool>> predicate)
+{
+    return await _dbContext.Cards.AnyAsync(predicate);
+}
     }
+    
+
+
 }

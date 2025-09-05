@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("YugiApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c74bd7cec780e5d5e629cbb09054a18d77a93e2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+250f377d11131d01f4b06160cd38dcccc4f390a0")]
 [assembly: System.Reflection.AssemblyProductAttribute("YugiApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("YugiApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -9,11 +9,14 @@ namespace YugiApi.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Card> Cards { get; set; }
+        public DbSet<ApiCardImage> ApiCardImages { get; set; }
         public DbSet<Deck> Decks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+  
 
             // Many-to-many veza za Cards u decku
             builder.Entity<Deck>()

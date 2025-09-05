@@ -1,0 +1,14 @@
+.rotating-card {
+  width: 120px;
+  height: auto;
+  animation: rotateCard 1s linear infinite;
+}
+
+@keyframes rotateCard {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}

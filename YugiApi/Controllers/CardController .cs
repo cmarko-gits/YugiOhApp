@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using YugiApi.Models;
 using YugiApi.Services;
+using YugiApi.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace YugiApi.Controllers
 {
@@ -15,44 +17,39 @@ namespace YugiApi.Controllers
             _cardService = cardService;
         }
 
+        // GET: api/card?name=Dragon&type=Monster&race=Dragon&minAtk=1000&page=1&pageSize=50
         [HttpGet]
-        public async Task<ActionResult<List<Card>>> GetAll(int page = 1, int pageSize = 50)
+        public async Task<ActionResult> GetCards(
+            [FromQuery] string name = null,
+            [FromQuery] string type = null,
+            [FromQuery] string race = null,
+            [FromQuery] int? minAtk = null,
+            [FromQuery] int? maxAtk = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 50)
         {
-            var cards = await _cardService.GetAllCardsAsync(page, pageSize);
-            return Ok(cards);
+            var (cards, totalCount) = await _cardService.GetCardsAsync(
+                name, type, race, minAtk, maxAtk, page, pageSize
+            );
+
+            return Ok(new
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Data = cards
+            });
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Card>> GetById(int id)
+        public async Task<ActionResult<Card>> GetCard(int id)
         {
-            var card = await _cardService.GetCardByIdAsync(id);
-
+            var card = await _cardService.GetByIdAsync(id);
             if (card == null)
-                return NotFound();
+                return NotFound(new { Message = $"Card with ID {id} not found" });
 
             return Ok(card);
         }
 
-        [HttpGet("search")]
-        public async Task<ActionResult<List<Card>>> Search([FromQuery] string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return BadRequest("Search term cannot be empty.");
-
-            var cards = await _cardService.SearchCardsByNameAsync(name);
-            return Ok(cards);
-        }
-[HttpGet("filter")]
-public async Task<ActionResult<List<Card>>> GetFiltered(
-    [FromQuery] string name,
-    [FromQuery] string type,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 50)
-{
-    var cards = await _cardService.GetFilteredCardsAsync(name, type ,  page, pageSize);
-    return Ok(cards);
-}
-
-    //
     }
 }

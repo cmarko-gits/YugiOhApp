@@ -170,3 +170,5 @@ C:\Users\makro\OneDrive\Desktop\Yu-Gi-Oh\YugiApi\bin\Debug\net9.0\Microsoft.Iden
 C:\Users\makro\OneDrive\Desktop\Yu-Gi-Oh\YugiApi\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\makro\OneDrive\Desktop\Yu-Gi-Oh\YugiApi\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\makro\OneDrive\Desktop\Yu-Gi-Oh\YugiApi\obj\Debug\net9.0\YugiApi.sourcelink.json
+C:\Users\makro\OneDrive\Desktop\Yu-Gi-Oh\YugiApi\bin\Debug\net9.0\package-lock.json
+C:\Users\makro\OneDrive\Desktop\Yu-Gi-Oh\YugiApi\bin\Debug\net9.0\package.json

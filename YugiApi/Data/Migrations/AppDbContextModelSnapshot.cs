@@ -190,6 +190,30 @@ namespace YugiApi.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("YugiApi.Models.ApiCardImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasAnnotation("Relational:JsonPropertyName", "id");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "image_url");
+
+                    b.Property<string>("ImageUrlCropped")
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "image_url_cropped");
+
+                    b.Property<string>("ImageUrlSmall")
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "image_url_small");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApiCardImages");
+                });
+
             modelBuilder.Entity("YugiApi.Models.Card", b =>
                 {
                     b.Property<int>("Id")
@@ -199,9 +223,6 @@ namespace YugiApi.Data.Migrations
                     b.Property<int?>("Attack")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Attribute")
-                        .HasColumnType("TEXT");
-
                     b.Property<int?>("Defense")
                         .HasColumnType("INTEGER");
 
@@ -210,9 +231,6 @@ namespace YugiApi.Data.Migrations
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("Level")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");

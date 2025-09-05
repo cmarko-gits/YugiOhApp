@@ -1,9 +1,9 @@
+using System.Text.Json.Serialization;
 using YugiApi.Models;
 namespace YugiApi.Dtos
+{public class YgoApiResponse
 {
-    public class YgoApiResponse
-    {
-        public List<Card> Data { get; set; }
-
-    }
+    [JsonPropertyName("data")]
+    public List<CardDto> Data { get; set; }
+}
 }

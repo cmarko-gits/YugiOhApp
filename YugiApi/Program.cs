@@ -88,6 +88,19 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+ // Program.cs ili Startup.cs
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", builder =>
+    {
+        builder.WithOrigins("http://localhost:3000") // tvoj frontend
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials(); // bitno za withCredentials
+    });
+});
+
 
 var app = builder.Build();
 
@@ -102,9 +115,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("CorsPolicy");
 
 app.MapControllers();
 
