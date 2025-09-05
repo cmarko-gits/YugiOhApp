@@ -1,73 +1,46 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box, Paper } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import agent from "../../api/agent";
-import { type CardItem } from "../../model/Card";
+import React, { useEffect } from "react";
+import {
+  addCardToDeck,
+  addFusionCardToDeck,
+  fetchDeck,
+  removeCardFromDeck,
+  removeFusionCardFromDeck,
+} from "../../slices/deckSlice";
+import { useAppDispatch, useAppSelector } from "../../store/configureStore";
 import DeckSlotsPanel from "./DeckSlotsPanel";
 
 const DeckPanel: React.FC = () => {
-  const [mainDeck, setMainDeck] = useState<Array<CardItem | null>>([]);
-  const [fusionDeck, setFusionDeck] = useState<Array<CardItem | null>>([]);
-
-  const fetchDecks = async () => {
-    try {
-      const response = await agent.Deck.getDeck();
-      const cards = response.data.cards as CardItem[];
-      const fusionCards = response.data.fusionDeck as CardItem[];
-
-      setMainDeck([...cards, ...Array(40 - cards.length).fill(null)]);
-
-      setFusionDeck([...fusionCards, ...Array(10 - fusionCards.length).fill(null)]);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const dispatch = useAppDispatch();
+  const { deck: mainDeck, fusionDeck, loading } = useAppSelector((state) => state.deck);
 
   useEffect(() => {
-    fetchDecks();
-  }, []);
+    dispatch(fetchDeck());
+  }, [dispatch]);
 
-  // --- MainDeck funkcije ---
-  const handleAddMainCard = async (index: number, card: CardItem) => {
-    try {
-      await agent.Deck.addCard(card.id);
-      fetchDecks();
-    } catch (error) {
-      console.error(error);
-    }
+  const handleAddMainCard = (index: number, card: any) => {
+    dispatch(addCardToDeck(card.id));
   };
 
-  const handleRemoveMainCard = async (card: CardItem) => {
-    try {
-      await agent.Deck.removeCard(card.id);
-      fetchDecks();
-    } catch (error) {
-      console.error(error);
-    }
+  const handleRemoveMainCard = (card: any) => {
+    dispatch(removeCardFromDeck(card.id));
   };
 
-  const handleAddFusionCard = async (index: number, card: CardItem) => {
-    try {
-      await agent.Deck.addFusionCard(card.id);
-      fetchDecks();
-    } catch (error) {
-      console.error(error);
-    }
+  const handleAddFusionCard = (index: number, card: any) => {
+    dispatch(addFusionCardToDeck(card.id));
   };
 
-  const handleRemoveFusionCard = async (card: CardItem) => {
-    try {
-      await agent.Deck.removeFusionCard(card.id);
-      fetchDecks();
-    } catch (error) {
-      console.error(error);
-    }
+  const handleRemoveFusionCard = (card: any) => {
+    dispatch(removeFusionCardFromDeck(card.id));
   };
+
+  if (loading) return <div>Loading deck...</div>;
 
   return (
     <Box sx={{ p: 4 }}>
       {/* Main Deck */}
       <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
-
         <DeckSlotsPanel
           deck={mainDeck}
           onDropCard={handleAddMainCard}
@@ -78,7 +51,6 @@ const DeckPanel: React.FC = () => {
 
       {/* Fusion Deck */}
       <Paper elevation={3} sx={{ p: 2 }}>
-
         <DeckSlotsPanel
           deck={fusionDeck}
           onDropCard={handleAddFusionCard}

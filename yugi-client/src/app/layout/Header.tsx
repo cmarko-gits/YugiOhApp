@@ -8,7 +8,7 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/auth/login");
+    navigate("/login");
   };
 
   return (

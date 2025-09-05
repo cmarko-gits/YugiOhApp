@@ -1,4 +1,3 @@
-// src/features/card/CardPage.tsx
 import {
   CardContent,
   CardMedia,
@@ -6,35 +5,28 @@ import {
   Card as MuiCard,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import agent from "../../api/agent";
 import LoadingPage from "../../layout/Loading/LoadingPage";
-import { type CardItem } from "../../model/Card";
+import { clearCard, fetchCardById } from "../../slices/cardSlice";
+import { useAppDispatch, useAppSelector } from "../../store/configureStore";
+
 
 const CardPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [card, setCard] = useState<CardItem | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  const { selectedCard, loading } = useAppSelector((state) => state.card);
 
   useEffect(() => {
-    const fetchCard = async () => {
-      try {
-        setLoading(true);
-        const response = await agent.Card.getById(Number(id));
-        setCard(response.data);
-      } catch (error) {
-        console.error("Failed to fetch card:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (id) dispatch(fetchCardById(Number(id)));
+    dispatch(clearCard());
 
-    if (id) fetchCard();
-  }, [id]);
+  }, [id, dispatch]);
 
   if (loading) return <LoadingPage />;
-  if (!card) return <Typography>Card not found.</Typography>;
+  if (!selectedCard) return <Typography>Card not found.</Typography>;
+
+  const card = selectedCard;
 
   return (
     <Container sx={{ py: 4 }}>
@@ -55,12 +47,12 @@ const CardPage = () => {
           <Typography variant="subtitle1" color="text.secondary">
             Type: {card.type}
           </Typography>
-          {card.attack !== 0 && (
+          {card.attack !== null && (
             <Typography variant="subtitle1" color="text.secondary">
               Attack: {card.attack}
             </Typography>
           )}
-          {card.defense !== 0 && (
+          {card.defense !== null && (
             <Typography variant="subtitle1" color="text.secondary">
               Defense: {card.defense}
             </Typography>

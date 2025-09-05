@@ -77,8 +77,8 @@ namespace YugiApi.Services
                         Type = c.Type,
                         Desc = c.Desc,
                         Race = c.Race,
-                        Attack = c.Atk ?? 0,
-                        Defense = c.Def ?? 0,
+                        Attack = c.Atk ?? null,
+                        Defense = c.Def ?? null,
                         ImageUrl = firstImage?.ImageUrl,
                     };
                 }).ToList();
