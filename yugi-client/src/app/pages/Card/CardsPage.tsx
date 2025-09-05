@@ -3,26 +3,24 @@ import {
   CardContent,
   CardMedia,
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Card as MuiCard,
-  Select,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import agent from "../../api/agent";
 import LoadingPage from "../../layout/Loading/LoadingPage";
+
+import CardFilter from "../../layout/Filters/Filter";
+import SearchBar from "../../layout/Search/Search";
 import { type CardItem } from "../../model/Card";
 
-const CardsPage = () => {
+const CardsPage: React.FC = () => {
   const [cards, setCards] = useState<CardItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
 
-  // search i filter
   const [search, setSearch] = useState<string>("");
   const [filter, setFilter] = useState<string>("");
 
@@ -30,7 +28,7 @@ const CardsPage = () => {
 
   const lastCardRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (loading || !hasMore) return; // ne učitava dalje ako nema više podataka
+      if (loading || !hasMore) return;
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
@@ -47,21 +45,12 @@ const CardsPage = () => {
   const fetchCards = async (page: number, reset: boolean = false) => {
     try {
       setLoading(true);
-      const response = await agent.Card.getAll(
-        page,
-        50,
-        search, // name
-        filter  // type
-      );
+      const response = await agent.Card.getAll(page, 50, search, filter);
       const newCards = response.data.data;
 
-      if (reset) {
-        setCards(newCards);
-      } else {
-        setCards((prev) => [...prev, ...newCards]);
-      }
+      if (reset) setCards(newCards);
+      else setCards((prev) => [...prev, ...newCards]);
 
-      // Ako nema novih karata ili je ukupno karata manje od jedne stranice, stopira paginaciju
       setHasMore(newCards.length === 50);
     } catch (error) {
       console.error("Failed to fetch cards:", error);
@@ -83,28 +72,10 @@ const CardsPage = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      {/* Search i filter sekcija */}
+      {/* Search + Filter */}
       <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-        <TextField
-          label="Search cards"
-          variant="outlined"
-          fullWidth
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Filter</InputLabel>
-          <Select
-            value={filter}
-            label="Filter"
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="Monster">Monster</MenuItem>
-            <MenuItem value="Spell">Spell</MenuItem>
-            <MenuItem value="Trap">Trap</MenuItem>
-          </Select>
-        </FormControl>
+        <SearchBar value={search} onChange={setSearch} />
+        <CardFilter value={filter} onChange={setFilter} />
       </Box>
 
       {/* Karte */}
@@ -114,28 +85,43 @@ const CardsPage = () => {
             key={card.id}
             ref={index === cards.length - 1 && hasMore ? lastCardRef : null}
             sx={{
-              flex: "0 0 20%", // 4 u redu
+              flex: "0 0 20%", // 5 karata po redu
               maxWidth: "20%",
               display: "flex",
             }}
           >
-            <MuiCard sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
+            <MuiCard
+              component={Link}
+              to={`/card/${card.id}`}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                textDecoration: "none",
+              }}
+            >
               <CardMedia
                 component="img"
                 image={card.imageUrl}
                 alt={card.name}
                 sx={{
                   width: "100%",
-                  height: "auto", // cela slika se vidi
-                  objectFit: "contain", // ili "cover" ako želiš da se popuni
+                  height: "auto",
+                  objectFit: "contain",
                 }}
               />
-              <CardContent>
+              <CardContent
+                sx={{
+                  maxHeight: 100,
+                  overflowY: "auto",
+                  padding: "16px",
+                }}
+              >
                 <Typography variant="h6" gutterBottom>
                   {card.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {card.description}
+                  {card.type}
                 </Typography>
               </CardContent>
             </MuiCard>

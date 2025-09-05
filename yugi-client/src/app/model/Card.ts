@@ -3,6 +3,7 @@ export type CardItem = {
   id: number;
   name: string;
    imageUrl: string;
- description: string;
+  desc: string; // <-- ovde mora da odgovara API-u
+ type:string
 };
 
