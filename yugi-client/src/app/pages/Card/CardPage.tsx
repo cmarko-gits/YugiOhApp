@@ -1,9 +1,10 @@
+// src/features/card/CardPage.tsx
 import {
-    CardContent,
-    CardMedia,
-    Container,
-    Card as MuiCard,
-    Typography,
+  CardContent,
+  CardMedia,
+  Container,
+  Card as MuiCard,
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -54,6 +55,16 @@ const CardPage = () => {
           <Typography variant="subtitle1" color="text.secondary">
             Type: {card.type}
           </Typography>
+          {card.attack !== 0 && (
+            <Typography variant="subtitle1" color="text.secondary">
+              Attack: {card.attack}
+            </Typography>
+          )}
+          {card.defense !== 0 && (
+            <Typography variant="subtitle1" color="text.secondary">
+              Defense: {card.defense}
+            </Typography>
+          )}
         </CardContent>
       </MuiCard>
     </Container>

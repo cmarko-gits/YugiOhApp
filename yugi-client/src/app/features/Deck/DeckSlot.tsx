@@ -10,7 +10,7 @@ interface DeckSlotProps {
   index: number;
   onDropCard: (index: number, card: CardItem) => void;
   onRemoveCard: (card: CardItem) => void;
-  onClick?: () => void; // <--- dodali smo optional onClick
+  onClick?: () => void;
 }
 
 interface DragItem {
@@ -23,8 +23,8 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ card, index, onDropCard, onRemoveCa
     drop: (item) => {
       if (item && item.card) onDropCard(index, item.card);
     },
-    collect: () => ({
-      isOver: false,
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
     }),
   });
 
@@ -37,7 +37,7 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ card, index, onDropCard, onRemoveCa
         onRemoveCard(item.card);
       }
     },
-  })[1]; // samo ref
+  })[1];
 
   return (
     <Box
@@ -56,7 +56,7 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ card, index, onDropCard, onRemoveCa
         boxShadow: card ? 2 : 0,
         transition: "all 0.2s ease",
       }}
-      onClick={onClick} // <--- ovde pozivamo onClick
+      onClick={onClick}
     >
       {card ? (
         <MuiCard

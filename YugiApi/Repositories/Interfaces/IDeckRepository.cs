@@ -8,5 +8,7 @@ namespace YugiApi.Repositories.Interfaces
         Task<Deck> GetDeckByUserIdAsync(string userId);
         Task AddCardToDeckAsync(string userId, int cardId);
         Task RemoveCardFromDeckAsync(string userId, int cardId);
+        Task AddCardToFusionDeckAsync(string userId, int cardId);
+        Task RemoveCardFromFusionDeckAsync(string userId, int cardId);
     }
 }

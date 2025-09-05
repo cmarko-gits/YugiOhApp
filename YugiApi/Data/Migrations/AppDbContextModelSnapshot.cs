@@ -223,6 +223,9 @@ namespace YugiApi.Data.Migrations
                     b.Property<int?>("Attack")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DeckId1")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("Defense")
                         .HasColumnType("INTEGER");
 
@@ -242,6 +245,8 @@ namespace YugiApi.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeckId1");
 
                     b.ToTable("Cards");
                 });
@@ -422,6 +427,13 @@ namespace YugiApi.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("YugiApi.Models.Card", b =>
+                {
+                    b.HasOne("YugiApi.Models.Deck", null)
+                        .WithMany("FusionDeck")
+                        .HasForeignKey("DeckId1");
+                });
+
             modelBuilder.Entity("YugiApi.Models.Deck", b =>
                 {
                     b.HasOne("YugiApi.Models.User", "User")
@@ -429,6 +441,11 @@ namespace YugiApi.Data.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("YugiApi.Models.Deck", b =>
+                {
+                    b.Navigation("FusionDeck");
                 });
 #pragma warning restore 612, 618
         }

@@ -48,6 +48,9 @@ const Deck = {
   getDeck: () => axiosInstance.get("/Deck"),
   addCard: (cardId: number) => axiosInstance.post(`/Deck/${cardId}`),
   removeCard: (cardId: number) => axiosInstance.delete(`/Deck/${cardId}`),
+    // Fusion deck
+  addFusionCard: (cardId: number) => axiosInstance.post(`/Deck/Fusion/${cardId}`),
+  removeFusionCard: (cardId: number) => axiosInstance.delete(`/Deck/Fusion/${cardId}`),
 };
 
 const User = {
