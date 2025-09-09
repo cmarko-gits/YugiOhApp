@@ -1,3 +1,4 @@
+// Header.js
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/Yu-Gi-Oh-Duel-Monsters-Logo-2001.png";
@@ -18,8 +19,8 @@ const Header = () => {
       sx={{
         boxShadow: 1,
         borderBottom: "1px solid #e0e0e0",
-                  margin: "0",
-          padding:"0",
+        margin: 0,
+        padding: 0,
         backgroundColor: "#ffffff",
       }}
     >
@@ -29,24 +30,26 @@ const Header = () => {
           justifyContent: "space-between",
           alignItems: "center",
           maxWidth: 1200,
-
           width: "100%",
+          minHeight: "auto", // uklanja default visinu Toolbara
+          padding: 0,
+          margin: 0,
         }}
       >
         {/* Logo + Title */}
         <Box
-          sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+          sx={{ display: "flex", alignItems: "center", cursor: "pointer", gap: 1 }}
           onClick={() => navigate("/")}
         >
           <img
             src={logo}
             alt="Logo"
-            style={{ height: 90, width: "auto", marginRight: 12 }}
+            style={{ height: 90, width: "auto", margin: 0 }}
           />
           <Typography
             variant="h6"
             component="div"
-            sx={{ fontWeight: 700, color: "#1976d2" }}
+            sx={{ fontWeight: 700, color: "#1976d2", margin: 0 }}
           >
             DuelMaster
           </Typography>

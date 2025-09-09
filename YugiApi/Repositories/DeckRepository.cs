@@ -21,8 +21,6 @@ namespace YugiApi.Repositories
             return await _context.Decks
                 .Include(d => d.Cards)
                 .Include(d => d.FusionDeck)
-                .Include(d => d.Graveyard)
-                .Include(d => d.Banished)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
         }
 
@@ -99,5 +97,30 @@ namespace YugiApi.Repositories
             deck.FusionDeck.Remove(card);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Deck> GetOrCreateDeckByUserIdAsync(string userId)
+        {
+            var deck = await _context.Decks
+                .Include(d => d.Cards)
+                .Include(d => d.FusionDeck)
+                .FirstOrDefaultAsync(d => d.UserId == userId);
+
+            if (deck == null)
+            {
+                deck = new Deck
+                {
+                    UserId = userId,
+                    Cards = new List<Card>(),
+                    FusionDeck = new List<Card>()
+                };
+                _context.Decks.Add(deck);
+                await _context.SaveChangesAsync();
+            }
+
+            return deck;
+        }
+
+       
+
     }
 }

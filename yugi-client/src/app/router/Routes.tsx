@@ -6,6 +6,7 @@ import CardPage from "../pages/Card/CardPage";
 import CardsPage from "../pages/Card/CardsPage";
 import DeckBuilderPage from "../pages/Deck/DeckBuilderPage";
 import ErrorPage from "../pages/Error/ErrorPage";
+import GamePage from "../pages/Game/GamePage";
 import HomePage from "../pages/Home/HomePage";
 
 
@@ -20,7 +21,8 @@ const router = createBrowserRouter([
       { path: "Login", element: <LoginPage /> },        // direktno /Login
       { path: "cards", element: <CardsPage /> }, 
       { path: "/card/:id", element: <CardPage/>},
-      { path: "deck" , element:<DeckBuilderPage/>}
+      { path: "deck" , element:<DeckBuilderPage/>},
+      { path: 'game' , element: <GamePage/>}
     ]
 
   },

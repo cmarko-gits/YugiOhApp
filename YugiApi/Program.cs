@@ -35,26 +35,29 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["TokenKey"])),
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["TokenKey"])
+        ),
         ValidateIssuer = false,
         ValidateAudience = false,
         RequireExpirationTime = true,
         ValidateLifetime = true,
-        NameClaimType = ClaimTypes.Name,
+        NameClaimType = ClaimTypes.NameIdentifier,
         RoleClaimType = ClaimTypes.Role
     };
 });
 
-// --- Services ---
-builder.Services.AddScoped<TokenService>();
-
 // --- Repositories ---
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
-builder.Services.AddScoped<IDeckRepository,DeckRepository>();
-// --- CardService with HttpClient ---
+builder.Services.AddScoped<IDeckRepository, DeckRepository>();
+builder.Services.AddScoped<IGameRepository, GameRepository>();
+
+// --- Services ---
+builder.Services.AddScoped<GameService>(); // SCOPED, NE singleton
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpClient<CardService>();
-builder.Services.AddScoped<CardService>();
+
 
 // --- Controllers & Swagger ---
 builder.Services.AddControllers();
@@ -84,23 +87,22 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            new string[] {}
         }
     });
 });
- // Program.cs ili Startup.cs
 
+// --- CORS ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", builder =>
+    options.AddPolicy("CorsPolicy", policyBuilder =>
     {
-        builder.WithOrigins("http://localhost:3000") // tvoj frontend
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials(); // bitno za withCredentials
+        policyBuilder.WithOrigins("http://localhost:3000")
+                     .AllowAnyHeader()
+                     .AllowAnyMethod()
+                     .AllowCredentials();
     });
 });
-
 
 var app = builder.Build();
 
@@ -115,11 +117,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseCors("AllowFrontend");
+app.UseCors("CorsPolicy");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("CorsPolicy");
 
 app.MapControllers();
 

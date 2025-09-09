@@ -43,9 +43,8 @@ const Card = {
   getById: (id: number) => axiosInstance.get(`/Card/${id}`),
 };
 
-
 const Deck = {
-  getDeck: () => axiosInstance.get("/Deck"),
+  getDeck: ()  => axiosInstance.get("/Deck"),
   addCard: (cardId: number) => axiosInstance.post(`/Deck/${cardId}`),
   removeCard: (cardId: number) => axiosInstance.delete(`/Deck/${cardId}`),
   addFusionCard: (cardId: number) => axiosInstance.post(`/Deck/Fusion/${cardId}`),
@@ -59,10 +58,17 @@ const User = {
     axiosInstance.post("/User/register", data),
 };
 
+const Game = {
+  start: () => axiosInstance.post("/Game/start"),
+  draw: (number: number) => axiosInstance.post("/Game/draw", null, { params: { number } }),
+  getState: () => axiosInstance.get("/Game/active"),
+};
+
 const agent = {
   Card,
   Deck,
   User,
+  Game, // dodali smo Game
 };
 
 export default agent;

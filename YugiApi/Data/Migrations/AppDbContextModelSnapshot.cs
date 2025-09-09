@@ -32,36 +32,6 @@ namespace YugiApi.Data.Migrations
                     b.ToTable("DeckCards", (string)null);
                 });
 
-            modelBuilder.Entity("CardDeck1", b =>
-                {
-                    b.Property<int>("Deck1Id")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("GraveyardId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Deck1Id", "GraveyardId");
-
-                    b.HasIndex("GraveyardId");
-
-                    b.ToTable("DeckGraveyard", (string)null);
-                });
-
-            modelBuilder.Entity("CardDeck2", b =>
-                {
-                    b.Property<int>("BanishedId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Deck2Id")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("BanishedId", "Deck2Id");
-
-                    b.HasIndex("Deck2Id");
-
-                    b.ToTable("DeckBanished", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -342,36 +312,6 @@ namespace YugiApi.Data.Migrations
                     b.HasOne("YugiApi.Models.Deck", null)
                         .WithMany()
                         .HasForeignKey("DeckId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("CardDeck1", b =>
-                {
-                    b.HasOne("YugiApi.Models.Deck", null)
-                        .WithMany()
-                        .HasForeignKey("Deck1Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("YugiApi.Models.Card", null)
-                        .WithMany()
-                        .HasForeignKey("GraveyardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("CardDeck2", b =>
-                {
-                    b.HasOne("YugiApi.Models.Card", null)
-                        .WithMany()
-                        .HasForeignKey("BanishedId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("YugiApi.Models.Deck", null)
-                        .WithMany()
-                        .HasForeignKey("Deck2Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

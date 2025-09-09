@@ -33,8 +33,7 @@ namespace YugiApi.Controllers
             {
                 Cards = deck.Cards.Select(c => new { c.Id, c.Name }),
                 FusionDeck = deck.FusionDeck.Select(c => new { c.Id, c.Name }),
-                Graveyard = deck.Graveyard.Select(c => new { c.Id, c.Name }),
-                Banished = deck.Banished.Select(c => new { c.Id, c.Name })
+
             });
         }
 
@@ -111,5 +110,9 @@ namespace YugiApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        
+
+
     }
 }

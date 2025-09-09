@@ -18,23 +18,12 @@ namespace YugiApi.Data
 
   
 
-            // Many-to-many veza za Cards u decku
             builder.Entity<Deck>()
                 .HasMany(d => d.Cards)
                 .WithMany()
                 .UsingEntity(j => j.ToTable("DeckCards"));
 
-            // Many-to-many veza za Graveyard
-            builder.Entity<Deck>()
-                .HasMany(d => d.Graveyard)
-                .WithMany()
-                .UsingEntity(j => j.ToTable("DeckGraveyard"));
-
-            // Many-to-many veza za Banished
-            builder.Entity<Deck>()
-                .HasMany(d => d.Banished)
-                .WithMany()
-                .UsingEntity(j => j.ToTable("DeckBanished"));
+  
         }
     }
 }
