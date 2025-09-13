@@ -1,12 +1,12 @@
-using YugiApi.Models;
 using System.Threading.Tasks;
+using YugiApi.Models;
 
 namespace YugiApi.Repositories.Interfaces
 {
     public interface IGameRepository
     {
-        Task<Game> GetGameAsync(string userId);
+    Task<Game?> GetActiveGameAsync(string userId);
         Task SaveGameAsync(Game game);
-        Task<bool> ExistsAsync(string userId);
+        Task RemoveGameAsync(string userId);
     }
 }
