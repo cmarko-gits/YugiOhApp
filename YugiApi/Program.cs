@@ -51,7 +51,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
 builder.Services.AddScoped<IDeckRepository, DeckRepository>();
-builder.Services.AddScoped<IGameRepository, GameRepository>();
 
 // --- Services ---
 builder.Services.AddScoped<GameService>(); // SCOPED, NE singleton

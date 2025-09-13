@@ -33,16 +33,16 @@ namespace YugiApi.Services
                 Banished = new List<Card>()
             };
 
-                var rng = new Random();
-    int n = deck.Cards.Count;
-    while (n > 1)
-    {
-        n--;
-        int k = rng.Next(n + 1);
-        var temp = deck.Cards[k];
-        deck.Cards[k] = deck.Cards[n];
-        deck.Cards[n] = temp;
-    }
+            var rng = new Random();
+            int n = deck.Cards.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                var temp = deck.Cards[k];
+                deck.Cards[k] = deck.Cards[n];
+                deck.Cards[n] = temp;
+            }
 
 
             // izvuci 5 karata u ruku
@@ -74,5 +74,6 @@ namespace YugiApi.Services
             game.Hand.Add(card);
             return card;
         }
+     
     }
 }

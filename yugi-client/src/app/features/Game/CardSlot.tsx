@@ -1,37 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box } from "@mui/material";
-import type { CardItem } from "../../model/Card";
 
 interface CardSlotProps {
-  card?: CardItem | null;
+  card: any | null;
   isFaceDown?: boolean;
 }
 
-export default function CardSlot({ card, isFaceDown = false }: CardSlotProps) {
+export default function CardSlot({ card }: CardSlotProps) {
   return (
     <Box
       sx={{
-        width: "6vw",
-        height: "9vw",
-        maxWidth: "80px",
-        maxHeight: "120px",
-        border: "2px solid #ccc",
-        borderRadius: 4,
-        backgroundColor: "#222",
-        backgroundImage: card
-          ? `url(${card.imageUrl})`
-          : isFaceDown
-          ? "url('/images/card-back.png')"
-          : "none",
+        width: 80,
+        height: 120,
+        border: "2px solid #fff",
+        borderRadius: 2,
+        backgroundImage: card ? `url(${card.imageUrl || "/assets/loading_card.jpg"})` : "none",
+        backgroundColor: card ? "transparent" : "#000", // prazni slotovi crni
         backgroundSize: "cover",
         backgroundPosition: "center",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        transition: "transform 0.2s",
-        "&:hover": {
-          transform: "scale(1.1)",
-          cursor: "pointer",
-        },
+        transition: "transform 0.3s ease",
+        "&:hover": { transform: card ? "scale(1.1)" : "none" },
       }}
     />
   );

@@ -52,7 +52,7 @@ namespace YugiApi.Controllers
 
             return Ok(new
             {
-                Hand = game.Hand.Select(c => new { c.Id, c.Name }),
+                Hand = game.Hand.Select(c => new { c.Id, c.Name , c.ImageUrl }),
                 DeckCount = game.Deck.Cards.Count
             });
         }

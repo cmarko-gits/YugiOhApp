@@ -11,9 +11,10 @@ export default function GameSlot({ cards }: GameSlotProps) {
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
+        gridTemplateColumns: `repeat(${cards.length || 1}, 1fr)`,
         gap: "0.5vw",
         width: "700px",
+        justifyContent: "center",
       }}
     >
       {cards.map((card, i) => (
