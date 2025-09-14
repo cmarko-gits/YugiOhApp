@@ -1,3 +1,5 @@
+import type { Card } from "../slices/gameSlice";
+
 export type CardItem = {
   id: number;
   name: string;
@@ -8,3 +10,7 @@ export type CardItem = {
   defense?:number
 };
 
+export interface CardSlot {
+  card: Card | null;
+  position?: "attack" | "defense"; // ako koristiš za režim čudovišta
+}

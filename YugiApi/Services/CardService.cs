@@ -27,6 +27,7 @@ namespace YugiApi.Services
             string race = null,
             int? minAtk = null,
             int? maxAtk = null,
+            int? level = null, 
             int page = 1,
             int pageSize = 50)
         {
@@ -77,6 +78,7 @@ namespace YugiApi.Services
                         Type = c.Type,
                         Desc = c.Desc,
                         Race = c.Race,
+                        Level = c.Level,
                         Attack = c.Atk ?? null,
                         Defense = c.Def ?? null,
                         ImageUrl = firstImage?.ImageUrl,

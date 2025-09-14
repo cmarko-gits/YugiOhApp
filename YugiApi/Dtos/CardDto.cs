@@ -25,6 +25,8 @@ namespace YugiApi.Dtos
 
     [JsonPropertyName("def")]
     public int? Def { get; set; }
+      [JsonPropertyName("level")]
+    public int? Level { get; set; }
 
     [JsonPropertyName("card_images")]
     public List<ApiCardImage> CardImages { get; set; }

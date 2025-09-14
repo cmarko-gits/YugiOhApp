@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Linq;
 using System.Threading.Tasks;
-using YugiApi.Services;
+using YugiApi.Models;
+using YugiApi.Services.Interfaces;
+using YugiApi.Repositories.Interfaces;
 
 namespace YugiApi.Controllers
 {
@@ -11,11 +13,13 @@ namespace YugiApi.Controllers
     [Route("api/[controller]")]
     public class GameController : ControllerBase
     {
-        private readonly GameService _gameService;
+        private readonly IGameService _gameService;
+        private readonly IGameRepository _gameRepo;
 
-        public GameController(GameService gameService)
+        public GameController(IGameService gameService, IGameRepository gameRepo)
         {
             _gameService = gameService;
+            _gameRepo = gameRepo;
         }
 
         [Authorize]
@@ -31,8 +35,15 @@ namespace YugiApi.Controllers
 
             return Ok(new
             {
-                Hand = game.Hand.Select(c => new { c.Id, c.Name , c.ImageUrl}),
+                Hand = game.Hand.Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.ImageUrl,
+                    c.Type
+                }),
                 DeckCount = game.Deck.Cards.Count,
+                FusionCount = game.Deck.FusionDeck.Count,
                 MonsterZone = game.MonsterZone,
                 SpellTrapZone = game.SpellTrapZone
             });
@@ -52,7 +63,13 @@ namespace YugiApi.Controllers
 
             return Ok(new
             {
-                Hand = game.Hand.Select(c => new { c.Id, c.Name , c.ImageUrl }),
+                Hand = game.Hand.Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.ImageUrl,
+                    c.Type
+                }),
                 DeckCount = game.Deck.Cards.Count
             });
         }
@@ -69,7 +86,13 @@ namespace YugiApi.Controllers
 
             return Ok(new
             {
-                Hand = game.Hand.Select(c => new { c.Id, c.Name }),
+                Hand = game.Hand.Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.ImageUrl,
+                    c.Type
+                }),
                 DeckCount = game.Deck.Cards.Count,
                 MonsterZone = game.MonsterZone,
                 SpellTrapZone = game.SpellTrapZone,
@@ -77,5 +100,36 @@ namespace YugiApi.Controllers
                 Banished = game.Banished.Select(c => new { c.Id, c.Name })
             });
         }
+
+        [Authorize]
+        [HttpPost("summon")]
+        public async Task<ActionResult> SummonMonster(int cardId, bool inAttackMode)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var result = await _gameService.SummonMonsterAsync(userId, cardId, inAttackMode);
+            if (!result.Success) return BadRequest(result.ErrorMessage);
+
+            return Ok(result.ErrorMessage);
+        }
+
+        [Authorize]
+[HttpPost("trapOrSpell")]
+public async Task<ActionResult> PlaceSpellTrap(int cardId)
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (userId == null)
+        return Unauthorized();
+
+    var result = await _gameService.PlaceSpellTrapAsync(userId, cardId);
+
+    if (!result.Success)
+        return BadRequest(result.ErrorMessage);
+
+    return Ok("Karta uspešno postavljena.");
+}
+
+
     }
 }

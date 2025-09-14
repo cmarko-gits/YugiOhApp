@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import agent from "../api/agent";
 
@@ -21,28 +20,23 @@ const initialState: AuthState = {
   error: null,
 };
 
+// --- LOGIN thunk ---
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
-  async (
-    data: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (data: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await agent.User.login(data);
-      return response.data; 
+      return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
-// REGISTER thunk
+// --- REGISTER thunk ---
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
-  async (
-    data: { username: string; email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (data: { username: string; email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await agent.User.register(data);
       return response.data;
@@ -57,12 +51,20 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
+      // Brišemo token i username iz stanja
       state.token = null;
       state.username = null;
-      state.playerId = null;
+
+      // Brišemo iz localStorage
       localStorage.removeItem("token");
       localStorage.removeItem("username");
+
+      // Ako želiš, možeš i playerId da obrišeš
+      state.playerId = null;
       localStorage.removeItem("playerId");
+
+      state.error = null;
+      state.loading = false;
     },
   },
   extraReducers: (builder) => {
@@ -77,29 +79,14 @@ const authSlice = createSlice({
         state.token = action.payload?.token ?? null;
         state.username = action.payload?.username ?? null;
         state.playerId =
-          action.payload?.playerId !== undefined &&
-          action.payload?.playerId !== null
+          action.payload?.playerId !== undefined && action.payload?.playerId !== null
             ? Number(action.payload.playerId)
             : null;
 
-        // localStorage save
-        if (state.token) {
-          localStorage.setItem("token", state.token);
-        } else {
-          localStorage.removeItem("token");
-        }
-
-        if (state.username) {
-          localStorage.setItem("username", state.username);
-        } else {
-          localStorage.removeItem("username");
-        }
-
-        if (state.playerId !== null) {
-          localStorage.setItem("playerId", state.playerId.toString());
-        } else {
-          localStorage.removeItem("playerId");
-        }
+        // Sačuvaj u localStorage
+        if (state.token) localStorage.setItem("token", state.token);
+        if (state.username) localStorage.setItem("username", state.username);
+        if (state.playerId !== null) localStorage.setItem("playerId", state.playerId.toString());
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;

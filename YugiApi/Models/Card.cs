@@ -16,7 +16,8 @@ namespace YugiApi.Models
     public string Desc { get; set; }
     public string Race { get; set; }
     public string ImageUrl { get; set; }
-    public int? Attack {get; set; }
+    public int? Level { get; set; }
+    public int? Attack { get; set; }
     public int? Defense { get; set; }
     }
 

@@ -1,21 +1,47 @@
+// components/GameField/GameField.tsx
+
 import { Box, Button } from "@mui/material";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { drawCardAsync, startGameAsync } from "../../slices/gameSlice";
-import type { AppDispatch, RootState } from "../../store/configureStore";
+import type { Card } from "../../slices/gameSlice";
+import {
+  drawCardAsync,
+  placeSpellTrapAsync,
+  selectGame,
+  startGameAsync,
+  summonCardAsync,
+} from "../../slices/gameSlice";
+import type { AppDispatch } from "../../store/configureStore";
 import Deck from "../Deck/Deck";
 import GameSlot from "./GameSlot";
 
 export default function GameField() {
   const dispatch = useDispatch<AppDispatch>();
+  const {
+    hand,
+    playerMonsterZone,
+    opponentMonsterZone,
+    playerSpellTrapZone,
+    opponentSpellTrapZone,
+    deckCount,
+    error,
+  } = useSelector(selectGame);
 
-  const { hand, monsterZone, spellTrapZone, deckCount } = useSelector(
-    (state: RootState) => state.game
-  );
-
+  // Pokreni igru kada se komponenta mount-uje
   useEffect(() => {
     dispatch(startGameAsync());
   }, [dispatch]);
+
+  const handleCardClick = (card: Card) => {
+    if (!card) return;
+    if (card.type.includes("Monster")) {
+      dispatch(summonCardAsync({ cardId: card.id, inAttackMode: true, isPlayer: true }));
+    } else if (card.type.includes("Spell") || card.type.includes("Trap")) {
+      dispatch(placeSpellTrapAsync({ cardId: card.id, isPlayer: true }));
+    } else {
+      console.warn("Nepoznat tip karte:", card);
+    }
+  };
 
   return (
     <Box
@@ -28,9 +54,11 @@ export default function GameField() {
         alignItems: "center",
         position: "relative",
         overflow: "hidden",
+        color: "white",
+        fontFamily: "Arial",
       }}
     >
-      {/* Običan deck - desno izvan containera */}
+      {/* DECK prikaz (u donjem desnom uglu) */}
       <Box
         sx={{
           position: "absolute",
@@ -44,7 +72,7 @@ export default function GameField() {
         <Deck count={deckCount} />
       </Box>
 
-      {/* Container za ruku i arenu */}
+      {/* Glavni kontejner */}
       <Box
         sx={{
           width: "1300px",
@@ -53,10 +81,10 @@ export default function GameField() {
           flexDirection: "column",
           justifyContent: "space-between",
           alignItems: "center",
-          position: "relative",
+          paddingY: 4,
         }}
       >
-        {/* Protivnik */}
+        {/* Protivnička zona */}
         <Box
           sx={{
             flexGrow: 1,
@@ -66,21 +94,23 @@ export default function GameField() {
             justifyContent: "space-evenly",
           }}
         >
-          <GameSlot cards={monsterZone} />
-          <GameSlot cards={spellTrapZone} />
+          {/* Monster zona gore */}
+          <GameSlot cards={opponentMonsterZone} />
+          {/* Spell/Trap zona dole */}
+          <GameSlot cards={opponentSpellTrapZone} />
         </Box>
 
-        {/* Dugmad */}
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button variant="contained" onClick={() => dispatch(startGameAsync())}>
+        {/* Kontrole */}
+        <Box sx={{ display: "flex", gap: 2, marginY: 2 }}>
+          <Button variant="contained" color="primary" onClick={() => dispatch(startGameAsync())}>
             Nova igra
           </Button>
-          <Button variant="contained" onClick={() => dispatch(drawCardAsync())}>
+          <Button variant="contained" color="secondary" onClick={() => dispatch(drawCardAsync())}>
             Izvuci kartu
           </Button>
         </Box>
 
-        {/* Igrač */}
+        {/* Igračeva zona */}
         <Box
           sx={{
             flexGrow: 1,
@@ -90,11 +120,32 @@ export default function GameField() {
             justifyContent: "space-evenly",
           }}
         >
-          <GameSlot cards={spellTrapZone} />
-          <GameSlot cards={monsterZone} />
-          <GameSlot cards={hand} />
+          {/* Monster zona gore */}
+          <GameSlot cards={playerMonsterZone} />
+          {/* Spell/Trap zona dole */}
+          <GameSlot cards={playerSpellTrapZone} />
+          {/* Ruka ispod */}
+          <GameSlot cards={hand} isHand onCardClick={handleCardClick} />
         </Box>
       </Box>
+
+      {/* Poruka o grešci */}
+      {error && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(255, 0, 0, 0.8)",
+            padding: "8px 16px",
+            borderRadius: 4,
+            fontWeight: "bold",
+          }}
+        >
+          {error}
+        </Box>
+      )}
     </Box>
   );
 }

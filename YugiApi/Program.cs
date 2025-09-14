@@ -10,10 +10,11 @@ using YugiApi.Models;
 using YugiApi.Repositories;
 using YugiApi.Repositories.Interfaces;
 using YugiApi.Services;
+using YugiApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Database ---
+// --- Database (SQLite) ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -47,16 +48,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// --- Repositories ---
+builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
 builder.Services.AddScoped<IDeckRepository, DeckRepository>();
 
-// --- Services ---
-builder.Services.AddScoped<GameService>(); // SCOPED, NE singleton
+builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpClient<CardService>();
 
+
+// --- Services ---
+builder.Services.AddScoped<GameService>(); // koristi IGameRepository
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddHttpClient<CardService>();
 
 // --- Controllers & Swagger ---
 builder.Services.AddControllers();

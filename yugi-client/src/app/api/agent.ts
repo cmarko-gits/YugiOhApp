@@ -59,10 +59,13 @@ const User = {
 };
 
 const Game = {
-  start: () => axiosInstance.post("/Game/start"),
-  draw: (number: number) => axiosInstance.post("/Game/draw", null, { params: { number } }),
-  getState: () => axiosInstance.get("/Game/active"),
+  start: () => axiosInstance.post("/game/start"),
+  draw: () => axiosInstance.post("/game/draw"),
+  summonMonster: (cardId: number, inAttackMode: boolean) =>
+    axiosInstance.post(`/game/summon?cardId=${cardId}&inAttackMode=${inAttackMode}`),
+placeSpellTrap: (cardId: number) => axiosInstance.post(`/game/trapOrSpell?cardId=${cardId}`),
 };
+
 
 const agent = {
   Card,
