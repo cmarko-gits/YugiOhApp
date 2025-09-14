@@ -1,74 +1,93 @@
-import { Box } from "@mui/material";
-import type { Card } from "../../slices/gameSlice";
+import { Box, Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { useState } from "react";
+import { placeSpellTrapAsync, summonCardAsync, type Card } from "../../slices/gameSlice";
+import { useAppDispatch } from "../../store/configureStore";
 
 interface CardWithMode extends Card {
-  inAttackMode?: boolean; // true = napad, false = odbrana
+  inAttackMode?: boolean;
 }
 
 interface Props {
   cards?: (CardWithMode | null)[];
-  card?: CardWithMode | null; // pojedinačni slot
+  card?: CardWithMode | null;
   isHand?: boolean;
-  isPlayerMonsterZone?: boolean;
-  onCardClick?: (card: CardWithMode) => void;
 }
 
-export default function GameSlot({ cards, card, isHand, isPlayerMonsterZone, onCardClick }: Props) {
-  const cardArray = cards ?? (card !== undefined ? [card] : []);
+export default function GameSlot({ cards, card, isHand }: Props) {
+  const dispatch = useAppDispatch();
+  const [selectedCard, setSelectedCard] = useState<CardWithMode | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const cardArray = cards ?? (card ? [card] : []);
+
+  const handleCardClick = (card: CardWithMode) => {
+  if (card.type.includes("Monster")) {
+    // Prikaz dijaloga za attack/defense
+    setSelectedCard(card);
+    setDialogOpen(true);
+  } else if (card.type.includes("Spell") || card.type.includes("Trap")) {
+    // Spell/Trap ide odmah u zonu
+    dispatch(placeSpellTrapAsync({ cardId: card.id, isPlayer: true }));
+  } else {
+    console.warn("Nepoznat tip karte:", card.type);
+  }
+};
+
+
+  const handleModeSelect = (inAttack: boolean) => {
+    if (selectedCard) {
+      dispatch(summonCardAsync({ cardId: selectedCard.id, inAttackMode: inAttack, isPlayer: true }));
+    }
+    setDialogOpen(false);
+    setSelectedCard(null);
+  };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        gap: 1,
-        justifyContent: "center",
-        padding: 1,
-      }}
-    >
-      {cardArray.map((cardItem, index) =>
-        cardItem ? (
-          <div
+    <>
+      <Box sx={{ display: "flex", gap: 1, justifyContent: "center", padding: 1 }}>
+        {cardArray.map((cardItem, index) => (
+          <Box
             key={index}
-            onClick={() => onCardClick?.(cardItem)}
-            style={{
-              cursor: isHand && onCardClick ? "pointer" : "default",
-              display: "inline-block",
-              width: isHand ? 90 : 80,
-              height: isHand ? 130 : 110,
+            sx={{
+              width: isHand ? 70 : 100,  // slot malo uži
+              height: isHand ? 100 : 110, // slot malo niži
               border: "1px solid gray",
-              userSelect: "none",
-              transform:
-                isPlayerMonsterZone && cardItem.inAttackMode === false
-                  ? "rotate(-90deg)"
-                  : "none",
-              transformOrigin: "center center",
-backgroundImage: `url(${cardItem.imageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
               borderRadius: 2,
-              transition: "transform 0.3s ease",
+              backgroundColor: cardItem ? "transparent" : "#333",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "relative",
+              cursor: isHand ? "pointer" : "default",
             }}
-            onMouseEnter={e => {
-              if (cardItem && isHand) e.currentTarget.style.transform += " scale(1.1)";
-            }}
-            onMouseLeave={e => {
-              if (cardItem && isHand)
-                e.currentTarget.style.transform = isPlayerMonsterZone && cardItem.inAttackMode === false ? "rotate(-90deg)" : "none";
-            }}
-          />
-        ) : (
-          <div
-            key={index}
-            style={{
-              width: isHand ? 90 : 80,
-              height: isHand ? 130 : 110,
-              backgroundColor: "#333",
-              border: "1px solid #555",
-              borderRadius: 2,
-            }}
-          />
-        )
-      )}
-    </Box>
+            onClick={() => isHand && cardItem && handleCardClick(cardItem)}
+          >
+            {cardItem && (
+              <Box
+                sx={{
+                  width: cardItem.inAttackMode === false && !isHand ? 110 : "110%",  // karta veća od slot-a
+                  height: "90%",
+                  backgroundImage: `url(${cardItem.imageUrl})`,
+                  backgroundSize: "contain",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                  transform: cardItem.inAttackMode === false && !isHand ? "rotate(-90deg)" : "none",
+                  transition: "transform 0.3s ease",
+                  borderRadius: 1,
+                }}
+              />
+            )}
+          </Box>
+        ))}
+      </Box>
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>Izaberite način za {selectedCard?.name}</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => handleModeSelect(true)}>Attack ⚔️</Button>
+          <Button onClick={() => handleModeSelect(false)}>Defense 🛡️</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

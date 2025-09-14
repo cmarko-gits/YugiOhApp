@@ -7,7 +7,7 @@ export interface Card {
   name: string;
   type: string; // "Effect Monster", "Spell Card", "Trap Card"
   imageUrl: string;
-  inAttackMode?: boolean; // samo za monsterZone karte
+  inAttackMode?: boolean; // true = napad, false = odbrana
 }
 
 interface GameState {
@@ -32,7 +32,7 @@ const initialState: GameState = {
   error: undefined,
 };
 
-// 🌟 Pomoćna funkcija za normalizaciju karte
+// 🌟 Pomoćna funkcija
 const normalizeCard = (card: any): Card => ({
   id: card.id,
   name: card.name || "Unknown Card",
@@ -46,13 +46,12 @@ export const startGameAsync = createAsyncThunk("game/startGame", async () => {
   return res.data;
 });
 
-// 🎯 Izvlačenje karte sa slikom
+// 🎯 Izvlačenje karte
 export const drawCardAsync = createAsyncThunk<Card>("game/drawCard", async () => {
   const res = await agent.Game.draw();
   const handArray = res.data?.hand ?? [];
-  if (!handArray || !handArray.length) throw new Error("Nema karata za izvlačenje");
+  if (!handArray.length) throw new Error("Nema karata za izvlačenje");
 
-  // uzimamo poslednju kartu iz niza
   const card = handArray[handArray.length - 1];
   return normalizeCard(card);
 });
@@ -127,18 +126,12 @@ const gameSlice = createSlice({
       }
     });
 
-    builder.addCase(startGameAsync.rejected, (state, action) => {
-      state.error = action.error.message;
-    });
-    builder.addCase(drawCardAsync.rejected, (state, action) => {
-      state.error = action.error.message;
-    });
-    builder.addCase(summonCardAsync.rejected, (state, action) => {
-      state.error = action.error.message;
-    });
-    builder.addCase(placeSpellTrapAsync.rejected, (state, action) => {
-      state.error = action.error.message;
-    });
+    builder.addMatcher(
+      (action) => action.type.endsWith("/rejected"),
+      (state, action: any) => {
+        state.error = action.error.message;
+      }
+    );
   },
 });
 
