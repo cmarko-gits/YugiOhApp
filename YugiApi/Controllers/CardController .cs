@@ -17,29 +17,29 @@ namespace YugiApi.Controllers
             _cardService = cardService;
         }
 
-        // GET: api/card?name=Dragon&type=Monster&race=Dragon&minAtk=1000&page=1&pageSize=50
         [HttpGet]
-        public async Task<ActionResult> GetCards(
-            [FromQuery] string name = null,
-            [FromQuery] string type = null,
-            [FromQuery] string race = null,
-            [FromQuery] int? minAtk = null,
-            [FromQuery] int? maxAtk = null,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50)
-        {
-            var (cards, totalCount) = await _cardService.GetCardsAsync(
-                name, type, race, minAtk, maxAtk, page, pageSize
-            );
+public async Task<ActionResult> GetCards(
+    [FromQuery] string name = null,
+    [FromQuery] string type = null,
+    [FromQuery] string race = null,
+    [FromQuery] int? minAtk = null,
+    [FromQuery] int? maxAtk = null,
+    [FromQuery] int? level = null,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 50)
+{
+    var (cards, totalCount) = await _cardService.GetCardsAsync(
+        name, type, race, minAtk, maxAtk, level, page, pageSize
+    );
 
-            return Ok(new
-            {
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize,
-                Data = cards
-            });
-        }
+    return Ok(new
+    {
+        TotalCount = totalCount,
+        Page = page,
+        PageSize = pageSize,
+        Data = cards
+    });
+}
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Card>> GetCard(int id)

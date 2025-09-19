@@ -66,54 +66,91 @@ namespace YugiApi.Services
             return card;
         }
 
-        public async Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(string userId, int cardId, bool inAttackMode)
+        public async Task<(bool Success, string Message)> SummonAsync(
+            string userId,
+            int cardId,
+            bool inAttackMode,
+            int[] tributeIds
+        )
         {
             var game = await _gameRepo.GetActiveGameAsync(userId);
             if (game == null) return (false, "Igra nije pokrenuta.");
 
             var card = game.Hand.FirstOrDefault(c => c.Id == cardId);
             if (card == null) return (false, "Karta nije u ruci.");
-            if (card.Type != "Monster" && card.Type != "Effect Monster") return (false, "Ova karta nije čudovište.");
-            if (card.Level > 4) return (false, "Level karte je veći od 4.");
+            if (string.IsNullOrWhiteSpace(card.Type) || !card.Type.ToLower().Contains("monster"))
+                return (false, "Ova karta nije čudovište.");
 
-            var index = game.MonsterZone.FindIndex(c => c == null);
-            if (index == -1) return (false, "Nema slobodnog mesta u Monster zoni.");
-
-            game.Hand.Remove(card);
-            game.MonsterZone[index] = new CardSlot
+            if (card.Level <= 4)
             {
-                Card = card,
-                IsFaceUp = true,
-                Position = inAttackMode ? "Attack" : "Defense"
-            };
+                // normal summon
+                var index = game.MonsterZone.FindIndex(c => c == null);
+                if (index == -1) return (false, "Nema slobodnog mesta u Monster zoni.");
 
-            await _gameRepo.SaveGameAsync(game);
-            return (true, $"Karta uspešno prizvana u {(inAttackMode ? "Attack" : "Defense")} modu.");
+                game.Hand.Remove(card);
+                game.MonsterZone[index] = new CardSlot
+                {
+                    Card = card,
+                    IsFaceUp = true,
+                    Position = inAttackMode ? "Attack" : "Defense"
+                };
+
+                await _gameRepo.SaveGameAsync(game);
+                return (true, $"Karta {card.Name} uspešno prizvana u {(inAttackMode ? "Attack" : "Defense")} modu.");
+            }
+            else
+            {
+                // tribute summon
+                int requiredTributes = card.Level >= 7 ? 2 : 1;
+                if (tributeIds == null || tributeIds.Length != requiredTributes)
+                    return (false, $"Ovaj monstrum zahtijeva {requiredTributes} tribute(a).");
+
+                var playerZone = game.MonsterZone;
+                var tributeIndexes = new List<int>();
+
+                foreach (var tId in tributeIds)
+                {
+                    var idx = playerZone.FindIndex(slot => slot?.Card?.Id == tId);
+                    if (idx == -1) return (false, $"Tribute karta sa ID {tId} nije pronađena u Monster zoni.");
+                    tributeIndexes.Add(idx);
+                }
+
+                if (tributeIndexes.Distinct().Count() != tributeIndexes.Count)
+                    return (false, "Ne možete koristiti istu kartu više puta kao tribute.");
+
+                foreach (var idx in tributeIndexes)
+                {
+                    var slot = playerZone[idx];
+                    if (slot?.Card == null || !slot.Card.Type.ToLower().Contains("monster"))
+                        return (false, $"Karta u monster slotu {idx} nije čudovište i ne može biti tribute.");
+                }
+
+                var orderedIndexes = tributeIndexes.OrderByDescending(i => i).ToList();
+                foreach (var idx in orderedIndexes)
+                {
+                    var sacrificed = playerZone[idx]?.Card;
+                    if (sacrificed != null)
+                    {
+                        game.Graveyard.Add(sacrificed);
+                        game.MonsterZone[idx] = null;
+                    }
+                }
+
+                var freeIndex = game.MonsterZone.FindIndex(s => s == null);
+                if (freeIndex == -1) return (false, "Nema slobodnog mesta u Monster zoni za prizivanje.");
+
+                game.Hand.Remove(card);
+                game.MonsterZone[freeIndex] = new CardSlot
+                {
+                    Card = card,
+                    IsFaceUp = true,
+                    Position = inAttackMode ? "Attack" : "Defense"
+                };
+
+                await _gameRepo.SaveGameAsync(game);
+                return (true, $"Karta {card.Name} uspešno prizvana uz {requiredTributes} tribute(a) u {(inAttackMode ? "Attack" : "Defense")} modu.");
+            }
         }
-
-       public async Task<(bool Success, string ErrorMessage)> PlaceSpellTrapAsync(string userId, int cardId)
-{
-    var game = await _gameRepo.GetActiveGameAsync(userId);
-    if (game == null) return (false, "Igra nije pokrenuta.");
-
-    var card = game.Hand.FirstOrDefault(c => c.Id == cardId);
-    if (card == null) return (false, "Karta nije u ruci.");
-    if (card.Type != "Spell Card" && card.Type != "Trap Card") return (false, "Karta nije Spell/Trap.");
-
-    var index = game.SpellTrapZone.FindIndex(c => c == null);
-    if (index == -1) return (false, "Nema mesta u Spell/Trap zoni.");
-
-    game.Hand.Remove(card);
-    game.SpellTrapZone[index] = new CardSlot
-    {
-        Card = card,
-        IsFaceUp = false
-    };
-
-    await _gameRepo.SaveGameAsync(game);
-    return (true, "");
-}
-
 
         private void ShuffleDeck(List<Card> cards)
         {
@@ -121,6 +158,31 @@ namespace YugiApi.Services
             var shuffled = cards.OrderBy(_ => rng.Next()).ToList();
             cards.Clear();
             cards.AddRange(shuffled);
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> PlaceSpellTrapAsync(string userId, int cardId)
+        {
+            var game = await _gameRepo.GetActiveGameAsync(userId);
+            if (game == null) return (false, "Igra nije pokrenuta.");
+
+            var card = game.Hand.FirstOrDefault(c => c.Id == cardId);
+            if (card == null) return (false, "Karta nije u ruci.");
+            if (string.IsNullOrWhiteSpace(card.Type) || (!card.Type.ToLower().Contains("spell") && !card.Type.ToLower().Contains("trap")))
+                return (false, "Ova karta nije Spell ili Trap.");
+
+            var index = game.SpellTrapZone.FindIndex(c => c == null);
+            if (index == -1) return (false, "Nema slobodnog mesta u Spell/Trap zoni.");
+
+            game.Hand.Remove(card);
+            game.SpellTrapZone[index] = new CardSlot
+            {
+                Card = card,
+                IsFaceUp = false,
+                Position = "Set"
+            };
+
+            await _gameRepo.SaveGameAsync(game);
+            return (true, "Karta uspešno postavljena.");
         }
     }
 }

@@ -22,97 +22,111 @@ namespace YugiApi.Services
         }
 
         public async Task<(List<Card> Cards, int TotalCount)> GetCardsAsync(
-            string name = null,
-            string type = null,
-            string race = null,
-            int? minAtk = null,
-            int? maxAtk = null,
-            int? level = null, 
-            int page = 1,
-            int pageSize = 50)
+    string name = null,
+    string type = null,
+    string race = null,
+    int? minAtk = null,
+    int? maxAtk = null,
+    int? level = null,
+    int page = 1,
+    int pageSize = 50)
+{
+    var query = _cardRepository.GetFilters();
+
+    // Normalizuj type parametar
+    if (!string.IsNullOrWhiteSpace(type))
+    {
+        type = type.Trim().ToLower();
+        if (type == "monster") type = "Monster";
+        else if (type == "spell") type = "Spell Card";
+        else if (type == "trap") type = "Trap Card";
+    }
+
+    // Filtriranje
+    if (!string.IsNullOrWhiteSpace(name))
+        query = query.Where(c => EF.Functions.Like(c.Name.ToLower(), $"%{name.Trim().ToLower()}%"));
+
+    if (!string.IsNullOrWhiteSpace(type))
+        query = query.Where(c => EF.Functions.Like(c.Type.ToLower(), $"%{type}%"));
+
+    if (!string.IsNullOrWhiteSpace(race))
+        query = query.Where(c => EF.Functions.Like(c.Race.ToLower(), $"%{race.Trim().ToLower()}%"));
+
+    if (minAtk.HasValue)
+        query = query.Where(c => c.Attack >= minAtk.Value);
+
+    if (maxAtk.HasValue)
+        query = query.Where(c => c.Attack <= maxAtk.Value);
+
+    if (level.HasValue)
+        query = query.Where(c => c.Level == level.Value);
+
+    int totalCount = await query.CountAsync();
+
+    var cards = await query
+        .OrderBy(c => c.Id)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    // Ako baza nema karte, povuci sa API-ja
+    if (!cards.Any() && !await _cardRepository.AnyAsync(c => true))
+    {
+        string apiUrl = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
+        var response = await _httpClient.GetAsync(apiUrl);
+        response.EnsureSuccessStatusCode();
+        var jsonString = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var apiResponse = JsonSerializer.Deserialize<YgoApiResponse>(jsonString, options);
+
+        var allCards = apiResponse.Data.Select(c =>
         {
-            var query = _cardRepository.GetFilters();
-
-            // Filtriranje
-            if (!string.IsNullOrWhiteSpace(name))
-                query = query.Where(c => c.Name.ToLower().Contains(name.ToLower()));
-
-            if (!string.IsNullOrWhiteSpace(type))
-                query = query.Where(c => c.Type.ToLower().Contains(type.ToLower()));
-
-            if (!string.IsNullOrWhiteSpace(race))
-                query = query.Where(c => c.Race.ToLower().Contains(race.ToLower()));
-
-            if (minAtk.HasValue)
-                query = query.Where(c => c.Attack >= minAtk.Value);
-
-            if (maxAtk.HasValue)
-                query = query.Where(c => c.Attack <= maxAtk.Value);
-
-            int totalCount = await query.CountAsync();
-
-            var cards = await query
-                .OrderBy(c => c.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            // Ako baza nema karte – povuci sa API-ja
-            if (!cards.Any() && !await _cardRepository.AnyAsync(c => true))
+            var firstImage = c.CardImages?.FirstOrDefault();
+            return new Card
             {
-                string apiUrl = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
-                var response = await _httpClient.GetAsync(apiUrl);
-                response.EnsureSuccessStatusCode();
-                var jsonString = await response.Content.ReadAsStringAsync();
+                Id = c.Id,
+                Name = c.Name,
+                Type = c.Type,
+                Desc = c.Desc,
+                Race = c.Race,
+                Level = c.Level,
+                Attack = c.Atk,
+                Defense = c.Def,
+                ImageUrl = firstImage?.ImageUrl
+            };
+        }).ToList();
 
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var apiResponse = JsonSerializer.Deserialize<YgoApiResponse>(jsonString, options);
+        await _cardRepository.AddRangeAsync(allCards);
 
-                var allCards = apiResponse.Data.Select(c =>
-                {
-                    var firstImage = c.CardImages?.FirstOrDefault();
-                    return new Card
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Type = c.Type,
-                        Desc = c.Desc,
-                        Race = c.Race,
-                        Level = c.Level,
-                        Attack = c.Atk ?? null,
-                        Defense = c.Def ?? null,
-                        ImageUrl = firstImage?.ImageUrl,
-                    };
-                }).ToList();
+        // Ponovo primeni filter
+        query = _cardRepository.GetFilters();
 
-                // Bulk insert
-                await _cardRepository.AddRangeAsync(allCards);
+        if (!string.IsNullOrWhiteSpace(name))
+            query = query.Where(c => EF.Functions.Like(c.Name.ToLower(), $"%{name.Trim().ToLower()}%"));
+        if (!string.IsNullOrWhiteSpace(type))
+            query = query.Where(c => EF.Functions.Like(c.Type.ToLower(), $"%{type}%"));
+        if (!string.IsNullOrWhiteSpace(race))
+            query = query.Where(c => EF.Functions.Like(c.Race.ToLower(), $"%{race.Trim().ToLower()}%"));
+        if (minAtk.HasValue)
+            query = query.Where(c => c.Attack >= minAtk.Value);
+        if (maxAtk.HasValue)
+            query = query.Where(c => c.Attack <= maxAtk.Value);
+        if (level.HasValue)
+            query = query.Where(c => c.Level == level.Value);
 
-                // Ponovo uzmi query sa filtrima
-                query = _cardRepository.GetFilters();
+        totalCount = await query.CountAsync();
 
-                if (!string.IsNullOrWhiteSpace(name))
-                    query = query.Where(c => c.Name.ToLower().Contains(name.ToLower()));
-                if (!string.IsNullOrWhiteSpace(type))
-                    query = query.Where(c => c.Type.ToLower().Contains(type.ToLower()));
-                if (!string.IsNullOrWhiteSpace(race))
-                    query = query.Where(c => c.Race.ToLower().Contains(race.ToLower()));
-                if (minAtk.HasValue)
-                    query = query.Where(c => c.Attack >= minAtk.Value);
-                if (maxAtk.HasValue)
-                    query = query.Where(c => c.Attack <= maxAtk.Value);
+        cards = await query
+            .OrderBy(c => c.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
 
-                totalCount = await query.CountAsync();
+    return (cards, totalCount);
+}
 
-                cards = await query
-                    .OrderBy(c => c.Id)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-            }
-
-            return (cards, totalCount);
-        }
 
         public async Task<Card> GetByIdAsync(int id)
         {

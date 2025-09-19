@@ -1,7 +1,12 @@
-// components/GameField/GameField.tsx
-
-import { Box, Button } from "@mui/material";
-import { useEffect } from "react";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { Card } from "../../slices/gameSlice";
 import {
@@ -27,20 +32,40 @@ export default function GameField() {
     error,
   } = useSelector(selectGame);
 
-  // Pokreni igru kada se komponenta mount-uje
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
+  const [spellTrapDialogOpen, setSpellTrapDialogOpen] = useState(false);
+
   useEffect(() => {
     dispatch(startGameAsync());
   }, [dispatch]);
 
   const handleCardClick = (card: Card) => {
     if (!card) return;
+
     if (card.type.includes("Monster")) {
-      dispatch(summonCardAsync({ cardId: card.id, inAttackMode: true, isPlayer: true }));
-    } else if (card.type.includes("Spell") || card.type.includes("Trap")) {
-      dispatch(placeSpellTrapAsync({ cardId: card.id, isPlayer: true }));
-    } else {
-      console.warn("Nepoznat tip karte:", card);
+      setSelectedCard(card);
+      setMonsterDialogOpen(true);
+    } else if (card.type.includes("Trap")) {
+      dispatch(placeSpellTrapAsync({ cardId: card.id, isPlayer: true, isFaceDown: true }));
+    } else if (card.type.includes("Spell")) {
+      setSelectedCard(card);
+      setSpellTrapDialogOpen(true);
     }
+  };
+
+  const handleMonsterSummon = (inAttackMode: boolean) => {
+    if (!selectedCard) return;
+    dispatch(summonCardAsync({ cardId: selectedCard.id, inAttackMode, isPlayer: true }));
+    setMonsterDialogOpen(false);
+    setSelectedCard(null);
+  };
+
+  const handleSpellTrapSet = (activate: boolean) => {
+    if (!selectedCard) return;
+    dispatch(placeSpellTrapAsync({ cardId: selectedCard.id, isPlayer: true, isFaceDown: !activate }));
+    setSpellTrapDialogOpen(false);
+    setSelectedCard(null);
   };
 
   return (
@@ -52,18 +77,17 @@ export default function GameField() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        position: "relative",
         overflow: "hidden",
         color: "white",
         fontFamily: "Arial",
       }}
     >
-      {/* DECK prikaz (u donjem desnom uglu) */}
+      {/* Deck */}
       <Box
         sx={{
           position: "absolute",
-          right: "calc(50% - 650px - 20px)",
-          bottom: 50,
+          right: "20px",
+          bottom: "200px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -76,7 +100,7 @@ export default function GameField() {
       <Box
         sx={{
           width: "1300px",
-          height: "100%",
+          height: "90%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -84,19 +108,9 @@ export default function GameField() {
           paddingY: 4,
         }}
       >
-        {/* Protivnička zona */}
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "space-evenly",
-          }}
-        >
-          {/* Monster zona gore */}
+        {/* Protivnik */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: "center" }}>
           <GameSlot cards={opponentMonsterZone} />
-          {/* Spell/Trap zona dole */}
           <GameSlot cards={opponentSpellTrapZone} />
         </Box>
 
@@ -110,26 +124,19 @@ export default function GameField() {
           </Button>
         </Box>
 
-        {/* Igračeva zona */}
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "space-evenly",
-          }}
-        >
-          {/* Monster zona gore */}
+        {/* Igrač */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, width: "100%" }}>
           <GameSlot cards={playerMonsterZone} />
-          {/* Spell/Trap zona dole */}
           <GameSlot cards={playerSpellTrapZone} />
+
           {/* Ruka ispod */}
-          <GameSlot cards={hand} isHand onCardClick={handleCardClick} />
+          <Box sx={{ width: "100%", overflowX: "auto" }}>
+            <GameSlot cards={hand} isHand onCardClick={handleCardClick} />
+          </Box>
         </Box>
       </Box>
 
-      {/* Poruka o grešci */}
+      {/* Error */}
       {error && (
         <Box
           sx={{
@@ -137,7 +144,7 @@ export default function GameField() {
             top: 20,
             left: "50%",
             transform: "translateX(-50%)",
-            backgroundColor: "rgba(255, 0, 0, 0.8)",
+            backgroundColor: "rgba(255,0,0,0.8)",
             padding: "8px 16px",
             borderRadius: 4,
             fontWeight: "bold",
@@ -146,6 +153,26 @@ export default function GameField() {
           {error}
         </Box>
       )}
+
+      {/* Dialog Monster */}
+      <Dialog open={monsterDialogOpen} onClose={() => setMonsterDialogOpen(false)}>
+        <DialogTitle>Izaberi poziciju čudovišta</DialogTitle>
+        <DialogContent>Da li želite da prizovete u Attack ili Defense poziciji?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleMonsterSummon(true)}>Attack</Button>
+          <Button onClick={() => handleMonsterSummon(false)}>Defense</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog Spell */}
+      <Dialog open={spellTrapDialogOpen} onClose={() => setSpellTrapDialogOpen(false)}>
+        <DialogTitle>Spell/Trap opcija</DialogTitle>
+        <DialogContent>Da li želite da aktivirate odmah ili postavite face-down?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleSpellTrapSet(false)}>Set Face-Down</Button>
+          <Button onClick={() => handleSpellTrapSet(true)}>Activate Immediately</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
