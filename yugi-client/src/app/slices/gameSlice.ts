@@ -2,18 +2,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import agent from "../api/agent";
 
-// 🔹 Card tip
 export interface Card {
   id: number;
   name: string;
-  type: string; // "Effect Monster", "Spell Card", "Trap Card"
+  type: string;
   imageUrl: string;
-  inAttackMode?: boolean; // true = napad, false = odbrana
+  inAttackMode?: boolean;
   level?: number;
-  isFaceDown?: boolean;  // true = licem nadole
-  isActivated?: boolean; // true = karta je aktivirana}
+  isFaceDown?: boolean;
+  isActivated?: boolean;
 }
-// 🔹 State igre
+
 interface GameState {
   playerMonsterZone: (Card | null)[];
   opponentMonsterZone: (Card | null)[];
@@ -25,7 +24,6 @@ interface GameState {
   error?: string;
 }
 
-// 🔹 Početni state
 const initialState: GameState = {
   hand: [],
   playerMonsterZone: [null, null, null, null, null],
@@ -37,75 +35,46 @@ const initialState: GameState = {
   error: undefined,
 };
 
-// 🌟 Normalizacija karte
 const normalizeCard = (card: any): Card => ({
   id: card.id,
   name: card.name || "Unknown Card",
   type: card.type || "Effect Monster",
-  imageUrl:
-    card.imageUrl ||
-    `https://images.ygoprodeck.com/images/cards/${card.id}.jpg`,
+  imageUrl: card.imageUrl || `https://images.ygoprodeck.com/images/cards/${card.id}.jpg`,
   level: card.level,
   inAttackMode: true,
   isFaceDown: false,
 });
 
-// 🎯 Async Thunks
 export const startGameAsync = createAsyncThunk("game/startGame", async () => {
   const res = await agent.Game.start();
   return res.data;
 });
 
-export const drawCardAsync = createAsyncThunk<Card>(
-  "game/drawCard",
-  async () => {
-    const res = await agent.Game.draw();
-    const handArray = res.data?.hand ?? [];
-    if (!handArray.length) throw new Error("Nema karata za izvlačenje");
-    return normalizeCard(handArray[handArray.length - 1]);
-  }
-);
-
-export const summonCardAsync = createAsyncThunk<
-  { cardId: number; inAttackMode: boolean; isPlayer: boolean },
-  { cardId: number; inAttackMode: boolean; isPlayer: boolean }
->("game/summonCard", async ({ cardId, inAttackMode, isPlayer }) => {
-  await agent.Game.summonMonster(cardId, [], inAttackMode);
-  return { cardId, inAttackMode, isPlayer };
+export const drawCardAsync = createAsyncThunk<Card>("game/drawCard", async () => {
+  const res = await agent.Game.draw();
+  const handArray = res.data?.hand ?? [];
+  if (!handArray.length) throw new Error("Nema karata za izvlačenje");
+  return normalizeCard(handArray[handArray.length - 1]);
 });
 
-// 🎯 Spell/Trap async thunk
+// 🔹 ispravljen summon
+export const summonCardAsync = createAsyncThunk<
+  { cardId: number; inAttackMode: boolean },
+  { cardId: number; inAttackMode: boolean }
+>("game/summonCard", async ({ cardId, inAttackMode }) => {
+  await agent.Game.summonMonster(cardId, [], inAttackMode); // tributeIds = []
+  return { cardId, inAttackMode };
+});
+
 export const placeSpellTrapAsync = createAsyncThunk<
-  { cardId: number; isPlayer: boolean; isFaceDown: boolean }, // <- vraća i info da li je faceDown
-  { cardId: number; isPlayer: boolean; isFaceDown: boolean }  // <- očekuje i u argumentu
+  { cardId: number; isPlayer: boolean; isFaceDown: boolean },
+  { cardId: number; isPlayer: boolean; isFaceDown: boolean }
 >("game/placeSpellTrap", async ({ cardId, isPlayer, isFaceDown }) => {
-  await agent.Game.placeSpellTrap(cardId); // backend možeš proširiti da primi i isFaceDown ako treba
+  await agent.Game.placeSpellTrap(cardId);
   return { cardId, isPlayer, isFaceDown };
 });
 
-
-export const tributeSummonAsync = createAsyncThunk(
-  "game/tributeSummon",
-  async ({
-    cardId,
-    tributeIds,
-    inAttackMode,
-  }: {
-    cardId: number;
-    tributeIds: number[];
-    inAttackMode: boolean;
-  }) => {
-    const res = await agent.Game.summonMonster(
-      cardId,
-      tributeIds,
-      inAttackMode
-    );
-    return res.data;
-  }
-);
-
-// 🎯 Slice
-const gameSlice = createSlice({
+export const gameSlice = createSlice({
   name: "game",
   initialState,
   reducers: {
@@ -132,47 +101,32 @@ const gameSlice = createSlice({
     });
 
     builder.addCase(summonCardAsync.fulfilled, (state, action) => {
-      const { cardId, inAttackMode, isPlayer } = action.payload;
-      const handIndex = state.hand.findIndex((c) => c.id === cardId);
+      const { cardId, inAttackMode } = action.payload;
+      const handIndex = state.hand.findIndex(c => c.id === cardId);
       if (handIndex !== -1) {
         const card = state.hand.splice(handIndex, 1)[0];
-        const zone = isPlayer
-          ? state.playerMonsterZone
-          : state.opponentMonsterZone;
-        const slotIndex = zone.findIndex((slot) => slot === null);
-        if (slotIndex !== -1)
-          zone[slotIndex] = { ...card, inAttackMode, isFaceDown: false };
+        const zoneIndex = state.playerMonsterZone.findIndex(slot => slot === null);
+        if (zoneIndex !== -1) {
+          state.playerMonsterZone[zoneIndex] = { ...card, inAttackMode, isFaceDown: false };
+        }
       }
     });
 
     builder.addCase(placeSpellTrapAsync.fulfilled, (state, action) => {
-  const { cardId, isPlayer, isFaceDown } = action.payload;
-  const handIndex = state.hand.findIndex((c) => c.id === cardId);
-  if (handIndex !== -1) {
-    const card = state.hand.splice(handIndex, 1)[0];
-    const zone = isPlayer
-      ? state.playerSpellTrapZone
-      : state.opponentSpellTrapZone;
-    const slotIndex = zone.findIndex((slot) => slot === null);
-    if (slotIndex !== -1) {
-      zone[slotIndex] = {
-        ...card,
-        isFaceDown,
-        isActivated: !isFaceDown, // ako nije face-down → aktivirano
-      };
-    }
-  }
-});
-
-
-
-    builder.addCase(tributeSummonAsync.fulfilled, (state, action) => {
-      const payload = action.payload;
-      if (payload.hand) state.hand = payload.hand.map(normalizeCard);
-      if (payload.deckCount !== undefined) state.deckCount = payload.deckCount;
-      if (payload.monsterZone) state.playerMonsterZone = payload.monsterZone;
-      if (payload.spellTrapZone) state.playerSpellTrapZone = payload.spellTrapZone;
-      if (payload.message) console.log(payload.message);
+      const { cardId, isPlayer, isFaceDown } = action.payload;
+      const handIndex = state.hand.findIndex(c => c.id === cardId);
+      if (handIndex !== -1) {
+        const card = state.hand.splice(handIndex, 1)[0];
+        const zone = isPlayer ? state.playerSpellTrapZone : state.opponentSpellTrapZone;
+        const slotIndex = zone.findIndex(slot => slot === null);
+        if (slotIndex !== -1) {
+          zone[slotIndex] = {
+            ...card,
+            isFaceDown,
+            isActivated: !isFaceDown,
+          };
+        }
+      }
     });
 
     builder.addMatcher(
@@ -184,7 +138,6 @@ const gameSlice = createSlice({
   },
 });
 
-// 🔹 Exports
 export const { clearError } = gameSlice.actions;
 export const selectGame = (state: { game: GameState }) => state.game;
 export default gameSlice.reducer;

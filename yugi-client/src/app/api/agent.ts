@@ -62,9 +62,8 @@ const Game = {
   start: () => axiosInstance.post("/game/start"),
   draw: () => axiosInstance.post("/game/draw"),
   summonMonster: (cardId: number, tributeIds: number[], inAttackMode: boolean) =>
-    axiosInstance.post("/game/summon", { cardId, tributeIds, inAttackMode }),
-
-placeSpellTrap: (cardId: number) => axiosInstance.post(`/game/trapOrSpell?cardId=${cardId}`)
+    axiosInstance.post(`/game/summon?cardId=${cardId}&inAttackMode=${inAttackMode}`),
+  placeSpellTrap: (cardId: number) => axiosInstance.post(`/game/trapOrSpell?cardId=${cardId}`)
 };
 
 

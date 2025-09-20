@@ -54,12 +54,13 @@ export default function GameField() {
     }
   };
 
-  const handleMonsterSummon = (inAttackMode: boolean) => {
-    if (!selectedCard) return;
-    dispatch(summonCardAsync({ cardId: selectedCard.id, inAttackMode, isPlayer: true }));
-    setMonsterDialogOpen(false);
-    setSelectedCard(null);
-  };
+const handleMonsterSummon = (inAttackMode: boolean) => {
+  if (!selectedCard) return;
+  dispatch(summonCardAsync({ cardId: selectedCard.id, inAttackMode }));
+  setMonsterDialogOpen(false);
+  setSelectedCard(null);
+};
+
 
   const handleSpellTrapSet = (activate: boolean) => {
     if (!selectedCard) return;
