@@ -35,32 +35,54 @@ export default function GameField() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
   const [spellTrapDialogOpen, setSpellTrapDialogOpen] = useState(false);
+  const [tributeDialogOpen, setTributeDialogOpen] = useState(false);
+  const [selectedTributes, setSelectedTributes] = useState<number[]>([]);
 
   useEffect(() => {
     dispatch(startGameAsync());
   }, [dispatch]);
 
-  const handleCardClick = (card: Card) => {
-    if (!card) return;
+const handleCardClick = (card: Card) => {
+  if (!card) return;
 
-    if (card.type.includes("Monster")) {
-      setSelectedCard(card);
+  setSelectedCard(card);
+
+  if (card.type.includes("Monster")) {
+    if ((card.level ?? 0) > 4) {
+      setSelectedTributes([]);
+      setTributeDialogOpen(true);
+    } else {
       setMonsterDialogOpen(true);
-    } else if (card.type.includes("Trap")) {
-      dispatch(placeSpellTrapAsync({ cardId: card.id, isPlayer: true, isFaceDown: true }));
-    } else if (card.type.includes("Spell")) {
-      setSelectedCard(card);
-      setSpellTrapDialogOpen(true);
     }
-  };
-
-const handleMonsterSummon = (inAttackMode: boolean) => {
-  if (!selectedCard) return;
-  dispatch(summonCardAsync({ cardId: selectedCard.id, inAttackMode }));
-  setMonsterDialogOpen(false);
-  setSelectedCard(null);
+  } else if (card.type.includes("Trap")) {
+    dispatch(placeSpellTrapAsync({ cardId: card.id, isPlayer: true, isFaceDown: true }));
+  } else if (card.type.includes("Spell")) {
+    setSpellTrapDialogOpen(true);
+  }
 };
 
+  const toggleTribute = (cardId: number) => {
+    setSelectedTributes(prev =>
+      prev.includes(cardId)
+        ? prev.filter(id => id !== cardId)
+        : [...prev, cardId]
+    );
+  };
+
+  const handleTributeSummon = () => {
+    if (!selectedCard) return;
+    dispatch(summonCardAsync({ cardId: selectedCard.id, tributeIds: selectedTributes, inAttackMode: true }));
+    setTributeDialogOpen(false);
+    setSelectedCard(null);
+    setSelectedTributes([]);
+  };
+
+  const handleMonsterSummon = (inAttackMode: boolean) => {
+    if (!selectedCard) return;
+    dispatch(summonCardAsync({ cardId: selectedCard.id, tributeIds: [], inAttackMode }));
+    setMonsterDialogOpen(false);
+    setSelectedCard(null);
+  };
 
   const handleSpellTrapSet = (activate: boolean) => {
     if (!selectedCard) return;
@@ -162,6 +184,38 @@ const handleMonsterSummon = (inAttackMode: boolean) => {
         <DialogActions>
           <Button onClick={() => handleMonsterSummon(true)}>Attack</Button>
           <Button onClick={() => handleMonsterSummon(false)}>Defense</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog Tribute */}
+      <Dialog open={tributeDialogOpen} onClose={() => setTributeDialogOpen(false)}>
+        <DialogTitle>Izaberi tribute karte</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            {playerMonsterZone.map((slot, idx) =>
+              slot ? (
+                <Box
+                  key={idx}
+                  onClick={() => toggleTribute(slot.id)}
+                  sx={{
+                    width: 80,
+                    height: 120,
+                    border: selectedTributes.includes(slot.id) ? "3px solid red" : "1px solid white",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <img src={slot.imageUrl} alt={slot.name} style={{ width: "100%" }} />
+                  <div>{slot.name}</div>
+                </Box>
+              ) : null
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleTributeSummon}>Confirm Tribute Summon</Button>
         </DialogActions>
       </Dialog>
 

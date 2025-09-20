@@ -65,31 +65,75 @@ namespace YugiApi.Services
             await _gameRepo.SaveGameAsync(game);
             return card;
         }
+public async Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(
+    string userId,
+    int cardId,
+    List<int> tributeIds,
+    bool inAttackMode)
+{
+    var game = await _gameRepo.GetActiveGameAsync(userId);
+    if (game == null) return (false, "Igra nije pokrenuta.");
 
-        public async Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(string userId, int cardId, bool inAttackMode)
+    var card = game.Hand.FirstOrDefault(c => c.Id == cardId);
+    if (card == null) return (false, "Karta nije u ruci.");
+    if (!card.Type.Contains("Monster")) return (false, "Ova karta nije čudovište.");
+
+    // Normal summon: Level ≤ 4
+    if (card.Level <= 4)
+    {
+        var summonIndex = game.MonsterZone.FindIndex(slot => slot == null);
+        if (summonIndex == -1)
+            return (false, "Monster zona je puna. Nije moguće prizvati ovu kartu.");
+
+        // Normal summon ignoriše tributeIds
+        game.Hand.Remove(card);
+        game.MonsterZone[summonIndex] = new CardSlot
         {
-            var game = await _gameRepo.GetActiveGameAsync(userId);
-            if (game == null) return (false, "Igra nije pokrenuta.");
+            Card = card,
+            IsFaceUp = true,
+            Position = inAttackMode ? "Attack" : "Defense"
+        };
 
-            var card = game.Hand.FirstOrDefault(c => c.Id == cardId);
-            if (card == null) return (false, "Karta nije u ruci.");
-            if (card.Type != "Monster" && card.Type != "Effect Monster") return (false, "Ova karta nije čudovište.");
-            if (card.Level > 4) return (false, "Level karte je veći od 4.");
+        await _gameRepo.SaveGameAsync(game);
+        return (true, $"Karta {card.Name} uspešno prizvana.");
+    }
 
-            var index = game.MonsterZone.FindIndex(c => c == null);
-            if (index == -1) return (false, "Nema slobodnog mesta u Monster zoni.");
+    // Tribute summon: Level > 4
+    int requiredTributes = card.Level > 6 ? 2 : 1;
+    if (tributeIds == null || tributeIds.Count != requiredTributes)
+        return (false, $"Ova karta zahteva {requiredTributes} tribute karte.");
 
-            game.Hand.Remove(card);
-            game.MonsterZone[index] = new CardSlot
-            {
-                Card = card,
-                IsFaceUp = true,
-                Position = inAttackMode ? "Attack" : "Defense"
-            };
+    var tributeCards = game.MonsterZone
+        .Where(slot => slot != null && tributeIds.Contains(slot.Card.Id))
+        .Select(slot => slot.Card)
+        .ToList();
 
-            await _gameRepo.SaveGameAsync(game);
-            return (true, $"Karta uspešno prizvana u {(inAttackMode ? "Attack" : "Defense")} modu.");
-        }
+    if (tributeCards.Count != tributeIds.Count)
+        return (false, "Neki od tribute karata nisu u zoni ili ne postoje.");
+
+    // Ukloni tribute karte iz MonsterZone i prebaci u Graveyard
+    foreach (var tribute in tributeCards)
+    {
+        var tributeIndex = game.MonsterZone.FindIndex(slot => slot?.Card.Id == tribute.Id);
+        game.MonsterZone[tributeIndex] = null;
+        game.Graveyard.Add(tribute);
+    }
+
+    var summonIndex2 = game.MonsterZone.FindIndex(slot => slot == null);
+    if (summonIndex2 == -1) return (false, "Nema slobodnog mesta u Monster zoni.");
+
+    game.Hand.Remove(card);
+    game.MonsterZone[summonIndex2] = new CardSlot
+    {
+        Card = card,
+        IsFaceUp = true,
+        Position = inAttackMode ? "Attack" : "Defense"
+    };
+
+    await _gameRepo.SaveGameAsync(game);
+    return (true, $"Karta {card.Name} uspešno prizvana uz tribute.");
+}
+
 
        public async Task<(bool Success, string ErrorMessage)> PlaceSpellTrapAsync(string userId, int cardId)
 {
@@ -122,5 +166,8 @@ namespace YugiApi.Services
             cards.Clear();
             cards.AddRange(shuffled);
         }
+
+  
+
     }
 }

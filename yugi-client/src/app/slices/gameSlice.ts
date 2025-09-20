@@ -57,13 +57,12 @@ export const drawCardAsync = createAsyncThunk<Card>("game/drawCard", async () =>
   return normalizeCard(handArray[handArray.length - 1]);
 });
 
-// 🔹 ispravljen summon
 export const summonCardAsync = createAsyncThunk<
-  { cardId: number; inAttackMode: boolean },
-  { cardId: number; inAttackMode: boolean }
->("game/summonCard", async ({ cardId, inAttackMode }) => {
-  await agent.Game.summonMonster(cardId, [], inAttackMode); // tributeIds = []
-  return { cardId, inAttackMode };
+  { cardId: number; inAttackMode: boolean; tributeIds: number[] },
+  { cardId: number; inAttackMode: boolean; tributeIds: number[] }
+>("game/summonCard", async ({ cardId, inAttackMode, tributeIds }) => {
+  await agent.Game.summonMonster(cardId, tributeIds, inAttackMode);
+  return { cardId, inAttackMode, tributeIds };
 });
 
 export const placeSpellTrapAsync = createAsyncThunk<
@@ -100,18 +99,30 @@ export const gameSlice = createSlice({
       state.deckCount -= 1;
     });
 
-    builder.addCase(summonCardAsync.fulfilled, (state, action) => {
-      const { cardId, inAttackMode } = action.payload;
-      const handIndex = state.hand.findIndex(c => c.id === cardId);
-      if (handIndex !== -1) {
-        const card = state.hand.splice(handIndex, 1)[0];
-        const zoneIndex = state.playerMonsterZone.findIndex(slot => slot === null);
-        if (zoneIndex !== -1) {
-          state.playerMonsterZone[zoneIndex] = { ...card, inAttackMode, isFaceDown: false };
-        }
+ builder.addCase(summonCardAsync.fulfilled, (state, action) => {
+  const { cardId, inAttackMode, tributeIds } = action.payload;
+
+  // Ukloni kartu iz ruke
+  const handIndex = state.hand.findIndex(c => c.id === cardId);
+  if (handIndex !== -1) {
+    const card = state.hand.splice(handIndex, 1)[0];
+
+    // Ako postoje tribute karte, ukloni ih iz Monster Zone i dodaj u "Graveyard" (možeš napraviti)
+    tributeIds.forEach(id => {
+      const zoneIndex = state.playerMonsterZone.findIndex(slot => slot?.id === id);
+      if (zoneIndex !== -1) {
+        // Za sada samo ukloni iz zone, možeš napraviti state.graveyard.push(...)
+        state.playerMonsterZone[zoneIndex] = null;
       }
     });
 
+    // Dodaj kartu u Monster Zone
+    const zoneIndex = state.playerMonsterZone.findIndex(slot => slot === null);
+    if (zoneIndex !== -1) {
+      state.playerMonsterZone[zoneIndex] = { ...card, inAttackMode, isFaceDown: false };
+    }
+  }
+});
     builder.addCase(placeSpellTrapAsync.fulfilled, (state, action) => {
       const { cardId, isPlayer, isFaceDown } = action.payload;
       const handIndex = state.hand.findIndex(c => c.id === cardId);

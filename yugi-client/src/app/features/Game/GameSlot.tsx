@@ -34,21 +34,22 @@ export default function GameSlot({ cards, card, isHand, onCardClick }: Props) {
         const imgSrc = isFaceDown ? loading_card : cardItem?.imageUrl;
 
         return (
-          <Box
-            key={cardItem?.id ?? index}
-            onClick={() => isHand && cardItem && onCardClick?.(cardItem)}
-            sx={{
-              width: isHand ? 70 : 100,
-              height: isHand ? 100 : 110,
-              border: "1px solid gray",
-              borderRadius: 2,
-              backgroundColor: cardItem ? "transparent" : "#333",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              cursor: isHand ? "pointer" : "default",
-            }}
-          >
+       <Box
+  key={cardItem?.id ?? index}
+  onClick={() => cardItem && onCardClick?.(cardItem)} // uklonili smo isHand check
+  sx={{
+    width: isHand ? 70 : 100,
+    height: isHand ? 100 : 110,
+    border: "1px solid gray",
+    borderRadius: 2,
+    backgroundColor: cardItem ? "transparent" : "#333",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    cursor: cardItem ? "pointer" : "default",
+  }}
+>
+
             {cardItem && (
               <Box
                 sx={{
