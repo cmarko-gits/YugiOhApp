@@ -103,15 +103,13 @@ namespace YugiApi.Controllers
 
          [Authorize]
         [HttpPost("summon")]
-        public async Task<ActionResult> SummonMonster([FromBody] SummonRequest request)
+        public async Task<IActionResult> SummonMonster([FromBody] SummonRequest request)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
 
             var result = await _gameService.SummonMonsterAsync(userId, request.CardId, request.TributeIds ?? new List<int>(), request.InAttackMode);
-
-            if (!result.Success)
-                return BadRequest(result.ErrorMessage);
+            if (!result.Success) return BadRequest(result.ErrorMessage);
 
             return Ok(result.ErrorMessage);
         }
@@ -134,9 +132,16 @@ public async Task<ActionResult> PlaceSpellTrap(int cardId)
 
 
     }
-}  public class SummonRequest
+}    public class SummonRequest
     {
         public int CardId { get; set; }
         public List<int>? TributeIds { get; set; }
         public bool InAttackMode { get; set; }
     }
+
+    public class SpellTrapRequest
+    {
+        public int CardId { get; set; }
+        public bool IsFaceDown { get; set; } = true;
+    }
+

@@ -65,7 +65,8 @@ namespace YugiApi.Services
             await _gameRepo.SaveGameAsync(game);
             return card;
         }
-public async Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(
+
+        public async Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(
     string userId,
     int cardId,
     List<int> tributeIds,
@@ -166,8 +167,5 @@ public async Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(
             cards.Clear();
             cards.AddRange(shuffled);
         }
-
-  
-
     }
 }

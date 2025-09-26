@@ -13,6 +13,7 @@ Task<(bool Success, string ErrorMessage)> SummonMonsterAsync(
     int cardId,
     List<int> tributeIds,
     bool inAttackMode);
+
         Task<(bool Success, string ErrorMessage)> PlaceSpellTrapAsync(string userId, int cardId);
     }
 }
